@@ -1,2 +1,2 @@
 # CryptoWalter
-# CryptoWalter
+# Discord bot written in python
