@@ -1,3 +1,4 @@
 .env
 __pycache__/
 setup.cfg
+data.db
