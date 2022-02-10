@@ -7,3 +7,4 @@ Commands:
 
 .spot sell ADAUSDT 100  ->  Sells 100 dollars worth of ada, can also buy.
 
+.ping  ->  Pong!
