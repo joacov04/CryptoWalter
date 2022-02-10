@@ -2,3 +2,4 @@
 __pycache__/
 setup.cfg
 data.db
+cogs/__pycache__/
