@@ -1,59 +1,55 @@
 import discord
+from discord.ext import commands
 import os
 from dotenv import load_dotenv
-import binan
 
 load_dotenv()
 TOKEN = os.getenv('discord_secret')
-client = discord.Client()
+prefix = '.'
 
-prefix = '='
+class CustomHelp(commands.HelpCommand):
+    def __init__(self):
+        super().__init__()
+
+    async def send_bot_help(self, mapping):
+        return await super().send_bot_help(mapping)
+
+    async def send_cog_help(self, cog):
+        return await super().send_cog_help(cog)
+
+    async def send_group_help(self, group):
+        return await super().send_group_help(group)
+
+    async def send_command_help(self, command):
+        print(command)
+        return await super().send_command_help(command)
 
 
-def fancy_print(order):
-    if order['side'] == 'SELL':
-        color = 0x9e2626
-    else:
-        color = 0x269e46
-    emb = discord.Embed(title=order['symbol'] + ' ' + order['side'], color=color)
-    emb.add_field(name='Quantity', value=str(order['executedQty']))
-    emb.add_field(name='Cummulative quote quantity', value=str(order['cummulativeQuoteQty']))
-    emb.add_field(name='Price', value=str(order['fills'][0]['price']))
-    return emb
+client = commands.Bot(command_prefix = prefix) 
 
+@client.command()
+async def load(ctx, extension):
+    client.load_extension(f'cogs.{extension}')
+
+@client.command()
+async def unload(ctx, extension):
+    client.unload_extension(f'cogs.{extension}')
+
+@client.command()
+async def reload(ctx, extension):
+    client.unload_extension(f'cogs.{extension}')
+    client.load_extension(f'cogs.{extension}')
+
+# Error handling
 @client.event
-async def on_ready():
-    print('Estoy vivo como {0.user}'.format(client))
+async def on_command_error(ctx, error):
+    if isinstance(error, commands.MissingRequiredArgument):
+        await ctx.send('Missing required arguments.')
 
-
-@client.event
-async def on_message(message):
-    if message.author == client.user:
-        return
-
-    if message.content.startswith(prefix):
-        username = message.author.name + '#' + str(message.author.discriminator)
-        binance_client = binan.get_client(username)
-        binance_f_client = binan.get_f_client(username)
-        if 'spotOrder' in message.content:
-            content = message.content.replace(' ', '').split(',')
-
-            order = binan.spotOrder(binance_client, content[1].upper(), content[2], float(content[3]))
-
-            if 'APIError' in order:
-                await message.reply('ERROR -' + order.split(':')[1])
-            else:
-                await message.reply(embed=fancy_print(order))
-
-        if 'futuresOrder' in message.content:
-            content = message.content.replace(' ', '').split(',')
-
-            order = binan.execute_order(binance_f_client, _market=content[1].upper(), _side=content[2], _qty=float(content[3]))
-
-            if 'APIError' in order:
-                await message.reply('ERROR -' + order.split(':')[1])
-            else:
-                await message.reply(str(order))
-
+# Searchs for all the cogs and loads them
+for filename in os.listdir('./cogs'):
+    if filename.endswith('.py'):
+        # Remove the .py extension
+        client.load_extension(f'cogs.{filename[:-3]}')
 
 client.run(TOKEN)
