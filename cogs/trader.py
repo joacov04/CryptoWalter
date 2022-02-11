@@ -10,17 +10,15 @@ class Trader(commands.Cog):
         self.client = client
 
 
-    def get_client(self, user):
-        data = dbManagement.get_api(user)
-        try:
-            binance_client = Client(data[2], data[3])
-            return binance_client
-        except Exception as e:
-            err = "ERROR - {}".format(e)
-            return err
+    def get_client(self, id):
+        data = dbManagement.get_api(id)
+        if data is None:
+            raise Exception("You're not logged in with your Binance account.")
+        binance_client = Client(data[1], data[2])
+        return binance_client
 
     def embSpotOrder(self, order):
-        if 'APIError' in order:
+        if 'APIError' in order or 'ERROR' in order:
             color = 0xff0000
             emb = discord.Embed(title = str(order), color=color)
             return emb
@@ -41,8 +39,6 @@ class Trader(commands.Cog):
             side = SIDE_BUY
         if 'SELL' in side.upper():
             side = SIDE_SELL
-        if 'BOTH' in side.upper():
-            side = BOTH
         return side
 
     def embSinglePrice(self, price):
@@ -82,16 +78,8 @@ class Trader(commands.Cog):
 
         except Exception as e:
             err = "Binance error - {}".format(e)
-            return err
+            raise Exception(err)
 
-    def getAccApiStats(self, client):
-        try:
-            api = client.get_account_api_trading_status()
-            return api
-
-        except Exception as e:
-            err = "Binance error - {}".format(e)
-            return err
 
     def getSymPrice(self, client, symb):
         try:
@@ -100,36 +88,61 @@ class Trader(commands.Cog):
 
         except Exception as e:
             err = f'Binance error - {e}'
-            return err
+            raise Exception(err)
 
 
     #Commands
     ping_help = 'Pong!'
     @commands.command(help=ping_help)
     async def ping(self, ctx):
-        username = ctx.author.name + '#' + str(ctx.author.discriminator) 
-        binance_client = Trader.get_client(self, username)
-        api = Trader.getAccApiStats(self, binance_client)
-        await ctx.send(str(api))
+        await ctx.send('Pong!')
 
     spot_help = 'Makes a spot order, being <side> buy or sell, <symbol> the pair and <amount> the amount of crypto to operate'
     spot_brief = 'Makes a spot order.'
     @commands.command(help=spot_help, brief=spot_brief)
     async def spot(self, ctx, side: str, symbol: str,  amount: float):
-        username = ctx.author.name + '#' + str(ctx.author.discriminator) 
-        binance_client = Trader.get_client(self, username)
-        order = Trader.sendSpotOrder(self, binance_client, symbol.upper(), side, amount)
-        await ctx.send(embed=Trader.embSpotOrder(self, order))
+        id = ctx.author.id
+        try:
+            binance_client = Trader.get_client(self, id)
+            order = Trader.sendSpotOrder(self, binance_client, symbol.upper(), side, amount)
+            await ctx.send(embed=Trader.embSpotOrder(self, order))
+        except Exception as e:
+            await ctx.send(e)
 
     p_help = 'Sends the price of the <symbol> pair.'
     p_brief = 'Sends a certain crypto price.'
     @commands.command(help=p_help, brief=p_brief)
     async def p(self, ctx, symbol: str):
-        username = ctx.author.name + '#' + str(ctx.author.discriminator) 
-        binance_client = Trader.get_client(self, username)
-        price = Trader.getSymPrice(self, binance_client, symbol.upper())
-        msg = Trader.embSinglePrice(self, price)
-        await ctx.send(embed=msg)
+        id = ctx.author.id
+
+        try:
+            binance_client = Trader.get_client(self, 517016219002339329)
+            price = Trader.getSymPrice(self, binance_client, symbol.upper())
+            msg = Trader.embSinglePrice(self, price)
+            await ctx.send(embed=msg)
+
+        except Exception as e:
+            await ctx.send(str(e))
+
+    login_help = "USE THIS COMMAND VIA DM. Log in with your Binance account, send your api_key in the <api> argument and your secret_key in the <secret_key> argument."
+    login_brief = 'ONLY VIA DM - login to your Binance account'
+    @commands.command(help=login_help, brief=login_brief)
+    async def login(self, ctx, api, secret_key):
+        id = ctx.author.id
+        if ctx.guild is not None:
+            await ctx.send('Please use this command only via DM. For your on safety :sunglasses:')
+        else:
+            if dbManagement.get_api(id) is None:
+                try: 
+                    binance_client = Client(api, secret_key)                
+                    info = binance_client.get_account()
+                    dbManagement.insert_user(id, api, secret_key)
+                    await ctx.send(f'Succesfully logged in.')
+                except:
+                    await ctx.send('Credentials are wrong. Try again!')
+                
+            else:
+                await ctx.send(f"You're already logged in {ctx.author.name}!")
 
 
 
