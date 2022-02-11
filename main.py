@@ -27,18 +27,34 @@ class CustomHelp(commands.HelpCommand):
 
 client = commands.Bot(command_prefix = prefix) 
 
-@client.command()
+disclaimer = ' Only bot devs can make this action.'
+load_help = 'Loads the indicated cog.' + disclaimer
+@client.command(help=load_help)
 async def load(ctx, extension):
-    client.load_extension(f'cogs.{extension}')
+    if ctx.author.id == 517016219002339329:
+        client.load_extension(f'cogs.{extension}')
+        await ctx.send(f'Succesfully loaded {extension}')
+    else: 
+        await ctx.send("You're not a dev :(")
 
-@client.command()
+unload_help = 'Unloads the indicated cog.' + disclaimer
+@client.command(help=unload_help)
 async def unload(ctx, extension):
-    client.unload_extension(f'cogs.{extension}')
+    if ctx.author.id == 517016219002339329:
+        client.unload_extension(f'cogs.{extension}')
+        await ctx.send(f'Succesfully unloaded {extension}')
+    else: 
+        await ctx.send("You're not a dev :(")
 
-@client.command()
-async def reload(ctx, extension):
-    client.unload_extension(f'cogs.{extension}')
-    client.load_extension(f'cogs.{extension}')
+reload_help = 'Reloads the indicated cog.' + disclaimer
+@client.command(help=reload_help)
+async def re(ctx, extension):
+    if ctx.author.id == 517016219002339329:
+        client.unload_extension(f'cogs.{extension}')
+        client.load_extension(f'cogs.{extension}')
+        await ctx.send(f'Succesfully reloaded {extension}')
+    else: 
+        await ctx.send("You're not a dev :(")
 
 # Error handling
 @client.event

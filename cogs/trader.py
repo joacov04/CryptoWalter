@@ -104,25 +104,30 @@ class Trader(commands.Cog):
 
 
     #Commands
-    @commands.command()
+    ping_help = 'Pong!'
+    @commands.command(help=ping_help)
     async def ping(self, ctx):
         username = ctx.author.name + '#' + str(ctx.author.discriminator) 
         binance_client = Trader.get_client(self, username)
         api = Trader.getAccApiStats(self, binance_client)
         await ctx.send(str(api))
 
-    @commands.command()
-    async def spot(self, ctx, side: str, symb: str,  ammount: float):
+    spot_help = 'Makes a spot order, being <side> buy or sell, <symbol> the pair and <amount> the amount of crypto to operate'
+    spot_brief = 'Makes a spot order.'
+    @commands.command(help=spot_help, brief=spot_brief)
+    async def spot(self, ctx, side: str, symbol: str,  amount: float):
         username = ctx.author.name + '#' + str(ctx.author.discriminator) 
         binance_client = Trader.get_client(self, username)
-        order = Trader.sendSpotOrder(self, binance_client, symb.upper(), side, ammount)
+        order = Trader.sendSpotOrder(self, binance_client, symbol.upper(), side, amount)
         await ctx.send(embed=Trader.embSpotOrder(self, order))
 
-    @commands.command()
-    async def p(self, ctx, symb: str):
+    p_help = 'Sends the price of the <symbol> pair.'
+    p_brief = 'Sends a certain crypto price.'
+    @commands.command(help=p_help, brief=p_brief)
+    async def p(self, ctx, symbol: str):
         username = ctx.author.name + '#' + str(ctx.author.discriminator) 
         binance_client = Trader.get_client(self, username)
-        price = Trader.getSymPrice(self, binance_client, symb.upper())
+        price = Trader.getSymPrice(self, binance_client, symbol.upper())
         msg = Trader.embSinglePrice(self, price)
         await ctx.send(embed=msg)
 
