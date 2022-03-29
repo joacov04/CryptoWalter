@@ -1,7 +1,8 @@
 import discord
 from discord.ext import commands
 from binance.client import Client
-from binance.enums import *
+from binance.client import AsyncClient
+from binance.enums import * 
 import dbManagement
 
 class Trader(commands.Cog):
@@ -11,10 +12,17 @@ class Trader(commands.Cog):
 
 
     def get_client(self, id):
-        data = dbManagement.get_api(id)
+        data = dbManagement.get_api(id) # I know, hashing, for next update.
         if data is None:
             raise Exception("You're not logged in with your Binance account.")
         binance_client = Client(data[1], data[2])
+        return binance_client
+
+    def getAsyncClient(self, id):
+        data = dbManagement.get_api(id)
+        if data is None:
+            raise Exception("You're not logged in with your Binance account.")
+        binance_client = AsyncClient(data[1], data[2])
         return binance_client
 
     def embSpotOrder(self, order):
@@ -143,6 +151,19 @@ class Trader(commands.Cog):
                 
             else:
                 await ctx.send(f"You're already logged in {ctx.author.name}!")
+
+    @commands.command()
+    async def futures_pos(self, ctx, symbol:str):
+        id = ctx.author.id
+
+        try:
+            binance_client = Trader.get_client(self, id)
+            orders = binance_client.futures_position_information(symbol=symbol.upper())
+            await ctx.send(str(orders))
+
+        except Exception as e:
+            await ctx.send(str(e))
+
 
 
 
