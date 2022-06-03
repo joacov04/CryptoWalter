@@ -3,7 +3,7 @@ This bot can be connected with a binance account via API to make spot trades fro
 
 After clonning this repo:
 install python3 and all the pip packages specified in requirements.txt
-create a sqlite databse with a table called api, with three columns: user(int),
+create a sqlite databse called data.db with a table called api, with three columns: user(int),
 api_key(text), secret_api(text) 
 
 
